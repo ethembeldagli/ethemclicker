@@ -1,1042 +1,605 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EthemCoin Clicker</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#5D5CDE'
-                    }
-                }
-            }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EthemCoin Clicker</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          primary: '#5D5CDE'
         }
-    </script>
-    <style>
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-
-        @keyframes click-effect {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.95); }
-            100% { transform: scale(1); }
-        }
-
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .click-effect {
-            animation: click-effect 0.1s ease;
-        }
-
-        .pulse-ring {
-            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-        }
-
-        .money-circle-active {
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
-        }
-
-        .upgrade-item {
-            transition: all 0.3s ease;
-        }
-
-        .upgrade-item:hover {
-            transform: translateX(5px);
-        }
-
-        .modal-overlay {
-            backdrop-filter: blur(4px);
-        }
-
-        .console-output {
-            font-family: 'Courier New', monospace;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #5D5CDE;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4a49c5;
-        }
-
-        .dark ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-    </style>
+      }
+    }
+  };
+</script>
+<style>
+  /* Styles for animations, UI elements, modal overlay, scrollbar... */
+  .float-animation { animation: float 3s ease-in-out infinite; }
+  .click-effect { animation: click-effect 0.1s ease; }
+  .pulse-ring { animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+  .money-circle-active { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+  .upgrade-item { transition: all 0.3s ease; }
+  .upgrade-item:hover { transform: translateX(5px); }
+  .modal-overlay { backdrop-filter: blur(4px); }
+  .console-output { font-family: "Courier New", monospace; max-height: 24rem; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #5D5CDE #f3f4f6; }
+  .console-output::-webkit-scrollbar { width: 8px; }
+  .console-output::-webkit-scrollbar-track { background: #f3f4f6; }
+  .console-output::-webkit-scrollbar-thumb { background-color: #5D5CDE; border-radius: 4px; }
+  .console-output::-webkit-scrollbar-thumb:hover { background: #4a49c5; }
+  .dark .console-output::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); }
+</style>
 </head>
-<body class="bg-white dark:bg-[#181818] text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-hidden">
+<body class="bg-white dark:bg-181818 text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-hidden">
 
-    <!-- Shop Panel -->
-    <div id="shopPanel" class="fixed top-0 left-0 h-screen w-full md:w-1/5 bg-gray-100 dark:bg-gray-900 shadow-lg overflow-y-auto z-10 transition-all duration-300" style="min-width: 280px;">
-        <div class="p-4">
-            <h2 class="text-2xl font-bold mb-4 text-primary">Shop</h2>
-            <div id="upgradesList" class="space-y-3">
-                <!-- Upgrades will be dynamically added here -->
-            </div>
-        </div>
+<!-- Shop Panel -->
+<div id="shopPanel" class="fixed top-0 left-0 h-screen w-full md:w-15 bg-gray-100 dark:bg-gray-900 shadow-lg overflow-y-auto z-10 transition-all duration-300" style="min-width: 280px;">
+  <div class="p-4">
+    <h2 class="text-2xl font-bold mb-4 text-primary">Shop</h2>
+    <div id="upgradesList" class="space-y-3">
+      <!-- Upgrades will be dynamically added here -->
     </div>
+  </div>
+</div>
 
-    <!-- Main Game Area -->
-    <div id="mainArea" class="fixed top-0 left-0 md:left-1/5 w-full md:w-4/5 h-screen flex flex-col items-center justify-center p-4 transition-all duration-300">
+<!-- Main Game Area -->
+<div id="mainArea" class="fixed top-0 left-0 md:left-15 w-full md:w-45 h-screen flex flex-col items-center justify-center p-4 transition-all duration-300">
 
-        <!-- Level Display -->
-        <div class="absolute top-4 left-4 bg-gray-200 dark:bg-gray-800 px-6 py-3 rounded-lg shadow-md">
-            <div class="text-sm text-gray-600 dark:text-gray-400">Level</div>
-            <div class="text-2xl font-bold text-primary" id="levelDisplay">1</div>
-        </div>
+  <!-- Level Display -->
+  <div class="absolute top-4 left-4 bg-gray-200 dark:bg-gray-800 px-6 py-3 rounded-lg shadow-md">
+    <div class="text-sm text-gray-600 dark:text-gray-400">Level</div>
+    <div class="text-2xl font-bold text-primary" id="levelDisplay">1</div>
+  </div>
 
-        <!-- Money Circle Status -->
-        <div id="moneyCircleStatus" class="absolute top-4 right-4 bg-yellow-500 text-white px-6 py-3 rounded-lg shadow-md hidden">
-            <div class="text-sm font-bold">💰 MONEY CIRCLE ACTIVE!</div>
-            <div class="text-xs" id="moneyCircleTimer">2:00</div>
-        </div>
+  <!-- Money Circle Status -->
+  <div id="moneyCircleStatus" class="absolute top-4 right-4 bg-yellow-500 text-white px-6 py-3 rounded-lg shadow-md hidden">
+    <div class="text-sm font-bold">MONEY CIRCLE ACTIVE!</div>
+    <div class="text-xs" id="moneyCircleTimer">200</div>
+  </div>
 
-        <!-- Stats Display -->
-        <div class="text-center mb-8">
-            <h1 class="text-4xl md:text-6xl font-bold mb-2">EthemCoin Clicker</h1>
-            <div class="text-5xl md:text-7xl font-bold text-primary mb-2" id="clickCount">0</div>
-            <div class="text-lg text-gray-600 dark:text-gray-400">coins</div>
-            <div class="text-md text-gray-500 dark:text-gray-500 mt-2" id="cpsDisplay">0 CPS</div>
-            <div class="text-sm text-gray-500 dark:text-gray-500" id="totalCoinsDisplay">Total: 0</div>
-        </div>
+  <!-- Stats Display -->
+  <div class="text-center mb-8">
+    <h1 class="text-4xl md:text-6xl font-bold mb-2">EthemCoin Clicker</h1>
+    <div class="text-5xl md:text-7xl font-bold text-primary mb-2" id="clickCount">0</div>
+    <div class="text-lg text-gray-600 dark:text-gray-400">coins</div>
+    <div class="text-md text-gray-500 dark:text-gray-500 mt-2" id="cpsDisplay">0 CPS</div>
+    <div class="text-sm text-gray-500 dark:text-gray-500" id="totalCoinsDisplay">Total: 0</div>
+  </div>
 
-        <!-- Click Button -->
-        <button id="clickButton" class="w-48 h-48 md:w-64 md:h-64 bg-primary hover:bg-opacity-90 rounded-full shadow-2xl text-white text-3xl font-bold focus:outline-none transition-all duration-200 float-animation relative">
-            CLICK ME!
-            <div class="absolute inset-0 rounded-full border-4 border-primary opacity-50 pulse-ring"></div>
-        </button>
+  <!-- Click Button -->
+  <button id="clickButton" class="w-48 h-48 md:w-64 md:h-64 bg-primary hover:bg-opacity-90 rounded-full shadow-2xl text-white text-3xl font-bold focus:outline-none transition-all duration-200 float-animation relative">
+    CLICK ME!
+    <div class="absolute inset-0 rounded-full border-4 border-primary opacity-50 pulse-ring"></div>
+  </button>
 
-        <!-- Bottom Buttons -->
-        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4">
-            <button id="achievementsBtn" class="px-6 py-3 bg-primary text-white rounded-lg shadow-md hover:bg-opacity-90 transition-all duration-200 font-semibold">
-                🏆 Achievements
-            </button>
-            <button id="settingsBtn" class="px-6 py-3 bg-primary text-white rounded-lg shadow-md hover:bg-opacity-90 transition-all duration-200 font-semibold">
-                ⚙️ Settings
-            </button>
-            <button id="consoleBtn" class="px-6 py-3 bg-gray-700 text-white rounded-lg shadow-md hover:bg-opacity-90 transition-all duration-200 font-semibold">
-                💻 Console
-            </button>
-        </div>
+  <!-- Bottom Buttons -->
+  <div class="absolute bottom-4 left-12 transform -translate-x-12 flex gap-4">
+    <button id="achievementsBtn" class="px-6 py-3 bg-primary text-white rounded-lg shadow-md hover:bg-opacity-90 transition-all duration-200 font-semibold">Achievements</button>
+    <button id="settingsBtn" class="px-6 py-3 bg-primary text-white rounded-lg shadow-md hover:bg-opacity-90 transition-all duration-200 font-semibold">Settings</button>
+    <button id="consoleBtn" class="px-6 py-3 bg-gray-700 text-white rounded-lg shadow-md hover:bg-opacity-90 transition-all duration-200 font-semibold">Console</button>
+  </div>
+</div>
+
+<!-- Offline Progress Popup -->
+<div id="offlinePopup" class="hidden fixed inset-0 flex items-center justify-center z-50 modal-overlay bg-black bg-opacity-50">
+  <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-md w-full mx-4">
+    <h2 class="text-2xl font-bold mb-4 text-primary">Welcome Back!</h2>
+    <p class="text-lg mb-2">While you were away, your autoclickers earned</p>
+    <div class="text-4xl font-bold text-primary mb-4" id="offlineEarnings">0</div>
+    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Offline time: <span id="offlineTime">0</span></p>
+    <button id="closeOfflinePopup" class="w-full px-6 py-3 bg-primary text-white rounded-lg hover:bg-opacity-90 transition-all duration-200 font-semibold">Claim & Continue</button>
+  </div>
+</div>
+
+<!-- Achievements Modal -->
+<div id="achievementsModal" class="hidden fixed inset-0 flex items-center justify-center z-50 modal-overlay bg-black bg-opacity-50">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full mx-4 max-h-80vh overflow-y-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-3xl font-bold text-primary">Achievements</h2>
+      <button id="closeAchievements" class="text-2xl text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">&times;</button>
     </div>
+    <div id="achievementsList" class="space-y-3"></div>
+  </div>
+</div>
 
-    <!-- Offline Progress Popup -->
-    <div id="offlinePopup" class="hidden fixed inset-0 flex items-center justify-center z-50 modal-overlay bg-black bg-opacity-50">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-md w-full mx-4">
-            <h2 class="text-2xl font-bold mb-4 text-primary">Welcome Back!</h2>
-            <p class="text-lg mb-2">While you were away, your autoclickers earned:</p>
-            <div class="text-4xl font-bold text-primary mb-4" id="offlineEarnings">0</div>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Offline time: <span id="offlineTime">0</span></p>
-            <button id="closeOfflinePopup" class="w-full px-6 py-3 bg-primary text-white rounded-lg hover:bg-opacity-90 transition-all duration-200 font-semibold">
-                Claim & Continue
-            </button>
-        </div>
+<!-- Settings Modal -->
+<div id="settingsModal" class="hidden fixed inset-0 flex items-center justify-center z-50 modal-overlay bg-black bg-opacity-50">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-3xl font-bold text-primary">Settings</h2>
+      <button id="closeSettings" class="text-2xl text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">&times;</button>
     </div>
+    <div class="space-y-4">
+      <label class="block text-sm font-semibold mb-2">Shop Position</label>
+      <select id="shopSide" class="w-full px-4 py-2 text-base bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary">
+        <option value="left">Left</option>
+        <option value="right">Right</option>
+      </select>
 
-    <!-- Achievements Modal -->
-    <div id="achievementsModal" class="hidden fixed inset-0 flex items-center justify-center z-50 modal-overlay bg-black bg-opacity-50">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-3xl font-bold text-primary">🏆 Achievements</h2>
-                <button id="closeAchievements" class="text-2xl text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">&times;</button>
-            </div>
-            <div id="achievementsList" class="space-y-3">
-                <!-- Achievements will be dynamically added here -->
-            </div>
-        </div>
+      <label class="block text-sm font-semibold mb-2">Shop Color</label>
+      <input type="color" id="shopColor" class="w-full h-12 px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer" />
+      
+      <button id="resetProgress" class="w-full px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 font-semibold mt-4">Reset All Progress</button>
     </div>
+  </div>
+</div>
 
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="hidden fixed inset-0 flex items-center justify-center z-50 modal-overlay bg-black bg-opacity-50">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full mx-4">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-3xl font-bold text-primary">⚙️ Settings</h2>
-                <button id="closeSettings" class="text-2xl text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">&times;</button>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold mb-2">Shop Position</label>
-                    <select id="shopSide" class="w-full px-4 py-2 text-base bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary">
-                        <option value="left">Left</option>
-                        <option value="right">Right</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold mb-2">Shop Color</label>
-                    <input type="color" id="shopColor" class="w-full h-12 px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer">
-                </div>
-
-                <button id="resetProgress" class="w-full px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 font-semibold">
-                    🗑️ Reset All Progress
-                </button>
-            </div>
-        </div>
+<!-- Console Modal -->
+<div id="consoleModal" class="hidden fixed inset-0 flex items-center justify-center z-50 modal-overlay bg-black bg-opacity-50">
+  <div class="bg-gray-900 p-6 rounded-lg shadow-2xl max-w-3xl w-full mx-4 max-h-80vh flex flex-col">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-bold text-green-400">Developer Console</h2>
+      <button id="closeConsole" class="text-2xl text-gray-400 hover:text-gray-100">&times;</button>
     </div>
-
-    <!-- Console Modal -->
-    <div id="consoleModal" class="hidden fixed inset-0 flex items-center justify-center z-50 modal-overlay bg-black bg-opacity-50">
-        <div class="bg-gray-900 p-6 rounded-lg shadow-2xl max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-green-400">💻 Developer Console</h2>
-                <button id="closeConsole" class="text-2xl text-gray-400 hover:text-gray-100">&times;</button>
-            </div>
-
-            <div id="consoleOutput" class="flex-1 bg-black text-green-400 p-4 rounded-lg mb-4 overflow-y-auto console-output text-sm max-h-96">
-                <div>> Console ready. Type 'help' for commands.</div>
-            </div>
-
-            <div class="flex gap-2">
-                <input type="text" id="consoleInput" placeholder="Enter command..." class="flex-1 px-4 py-2 text-base bg-gray-800 text-green-400 border border-gray-700 rounded-lg focus:outline-none focus:border-green-400 console-output">
-                <button id="consoleSubmit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 font-semibold">
-                    Execute
-                </button>
-            </div>
-        </div>
+    <div id="consoleOutput" class="flex-1 bg-black text-green-400 p-4 rounded-lg mb-4 overflow-y-auto console-output">Console ready. Type 'help' for commands.</div>
+    <div class="flex gap-2">
+      <input type="text" id="consoleInput" placeholder="Enter command..." class="flex-1 px-4 py-2 text-base bg-gray-800 text-green-400 border border-gray-700 rounded-lg focus:outline-none focus:border-green-400" />
+      <button id="consoleSubmit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 font-semibold">Execute</button>
     </div>
+  </div>
+</div>
 
-    <!-- Confirmation Modal -->
-    <div id="confirmModal" class="hidden fixed inset-0 flex items-center justify-center z-50 modal-overlay bg-black bg-opacity-50">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl max-w-sm w-full mx-4">
-            <h3 class="text-xl font-bold mb-4" id="confirmTitle">Confirm Action</h3>
-            <p class="text-gray-700 dark:text-gray-300 mb-6" id="confirmMessage">Are you sure?</p>
-            <div class="flex justify-end space-x-3">
-                <button id="confirmCancel" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all duration-200">Cancel</button>
-                <button id="confirmOk" class="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded transition-all duration-200">Confirm</button>
-            </div>
-        </div>
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="hidden fixed inset-0 flex items-center justify-center z-50 modal-overlay bg-black bg-opacity-50">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl max-w-sm w-full mx-4">
+    <h3 class="text-xl font-bold mb-4" id="confirmTitle">Confirm Action</h3>
+    <p class="text-gray-700 dark:text-gray-300 mb-6" id="confirmMessage">Are you sure?</p>
+    <div class="flex justify-end space-x-3">
+      <button id="confirmCancel" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all duration-200">Cancel</button>
+      <button id="confirmOk" class="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded transition-all duration-200">Confirm</button>
     </div>
+  </div>
+</div>
 
-    <script>
-        // Game State
-        const gameState = {
-            clicks: 0,
-            totalCoins: 0,
-            clickPower: 1,
-            autoClickPower: 0,
-            upgrades: {
-                clickPower: 0,
-                autoclicker: 0
-            },
-            achievements: {},
-            level: 1,
-            lastSaveTime: Date.now(),
-            settings: {
-                shopSide: 'left',
-                shopColor: '#f3f4f6'
-            }
-        };
+<script>
+  // Game state initialization
+  const gameState = {
+    clicks: 0,
+    totalCoins: 0,
+    clickPower: 1,
+    autoClickPower: 0,
+    upgrades: {},
+    achievements: {},
+    level: 1,
+    lastSaveTime: Date.now(),
+    settings: {
+      shopSide: 'left',
+      shopColor: '#f3f4f6',
+    }
+  };
 
-        // Upgrade Definitions
-        const upgradeTypes = [
-            {
-                id: 'clickPower',
-                name: 'Click Power',
-                baseCost: 10,
-                costMultiplier: 1.15,
-                effect: 1,
-                description: '+1 click per click',
-                unlockThreshold: 0,
-                emoji: '👆'
-            },
-            {
-                id: 'autoclicker',
-                name: 'Auto Clicker',
-                baseCost: 50,
-                costMultiplier: 1.2,
-                effect: 1,
-                description: '+1 CPS',
-                unlockThreshold: 25,
-                emoji: '🤖'
-            },
-            {
-                id: 'megaClick',
-                name: 'Mega Click',
-                baseCost: 500,
-                costMultiplier: 1.3,
-                effect: 5,
-                description: '+5 clicks per click',
-                unlockThreshold: 200,
-                emoji: '💪'
-            },
-            {
-                id: 'superAutoclicker',
-                name: 'Super Auto',
-                baseCost: 2000,
-                costMultiplier: 1.25,
-                effect: 10,
-                description: '+10 CPS',
-                unlockThreshold: 1000,
-                emoji: '⚡'
-            }
-        ];
+  // Variables to hold loaded JSON data
+  let upgradeTypes = [];
+  let achievementsData = [];
+  let levelsData = [];
 
-        // Achievements and Levels Data (will be loaded from JSON)
-        let achievementsData = [];
-        let levelsData = [];
+  // Money Circle event state
+  let moneyCircleActive = false;
+  let moneyCircleEndTime = 0;
+  let moneyCircleTimeout = null;
 
-        // Money Circle Event State
-        let moneyCircleActive = false;
-        let moneyCircleEndTime = 0;
-        let moneyCircleTimeout = null;
+  // Load JSON data from external files
+  async function loadJSONData() {
+    try {
+      const [upgradesRes, achievementsRes, levelsRes] = await Promise.all([
+        fetch('/json/upgrades.json'),
+        fetch('/json/achievements.json'),
+        fetch('/json/levels.json'),
+      ]);
+      upgradeTypes = await upgradesRes.json();
+      achievementsData = await achievementsRes.json();
+      levelsData = await levelsRes.json();
 
-        // Initialize Dark Mode
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
+      // Initialize upgrades state if not present
+      if (!gameState.upgrades || Object.keys(gameState.upgrades).length === 0) {
+        gameState.upgrades = {};
+        upgradeTypes.forEach(upg => gameState.upgrades[upg.id] = 0);
+      }
+
+      // Initialize achievements state if not present
+      if (!gameState.achievements || Object.keys(gameState.achievements).length === 0) {
+        achievementsData.forEach(ach => gameState.achievements[ach.id] = 'locked');
+      }
+    } catch(e) {
+      console.error('Error loading JSON data:', e);
+    }
+  }
+
+  function formatNumber(num) {
+    if (num >= 1e12) return (num / 1e12).toFixed(2) + ' T';
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + ' B';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + ' M';
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + ' K';
+    return Math.floor(num).toString();
+  }
+
+  function getUpgradeCost(upgrade, owned) {
+    return Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, owned));
+  }
+
+  function calculateClickPower() {
+    let power = 1;
+    upgradeTypes.forEach(upg => {
+      if (upg.effect.type === 'clicksPerClick') {
+        power += (gameState.upgrades[upg.id] || 0) * upg.effect.amount;
+      }
+    });
+    return power;
+  }
+
+  function calculateAutoCPS() {
+    let cps = 0;
+    upgradeTypes.forEach(upg => {
+      if (upg.effect.type === 'autoClicksPerSecond') {
+        cps += (gameState.upgrades[upg.id] || 0) * upg.effect.amount;
+      }
+    });
+    return cps;
+  }
+
+  function getMoneyMultiplier() {
+    return moneyCircleActive ? 2 : 1;
+  }
+
+  function saveGame() {
+    gameState.lastSaveTime = Date.now();
+    localStorage.setItem('ethemCoinSave', JSON.stringify(gameState));
+  }
+
+  function loadGame() {
+    const saved = localStorage.getItem('ethemCoinSave');
+    if (saved) {
+      const loaded = JSON.parse(saved);
+      Object.assign(gameState, loaded);
+      // Initialize missing upgrades/achievements
+      upgradeTypes.forEach(upg => {
+        if (gameState.upgrades[upg.id] === undefined) gameState.upgrades[upg.id] = 0;
+      });
+      achievementsData.forEach(ach => {
+        if (!gameState.achievements.hasOwnProperty(ach.id)) gameState.achievements[ach.id] = 'locked';
+      });
+      return true;
+    }
+    return false;
+  }
+
+  function checkAchievements() {
+    achievementsData.forEach(ach => {
+      if (gameState.achievements[ach.id] === 'locked') {
+        const condition = ach.condition
+          .replace(/clicks/g, gameState.clicks)
+          .replace(/clicksPerClick/g, calculateClickPower())
+          .replace(/autoClicksPerSecond/g, calculateAutoCPS())
+          .replace(/totalCoins/g, gameState.totalCoins);
+        try {
+          if (eval(condition)) {
+            gameState.achievements[ach.id] = 'unclaimed';
+            showAchievementNotification(ach.name);
+          }
+        } catch (e) {
+          console.error(`Error evaluating achievement condition '${ach.id}':`, e);
         }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
+      }
+    });
+  }
+
+  function showAchievementNotification(name) {
+    const notif = document.createElement('div');
+    notif.className = 'fixed top-4 left-12 transform -translate-x-12 bg-primary text-white px-6 py-3 rounded-lg shadow-lg z-50';
+    notif.textContent = `Achievement Unlocked: ${name}!`;
+    document.body.appendChild(notif);
+    setTimeout(() => {
+      notif.style.transition = 'all 0.5s ease-out';
+      notif.style.transform = 'translate(-50%, -200%)';
+      notif.style.opacity = '0';
+      setTimeout(() => notif.remove(), 500);
+    }, 3000);
+  }
+
+  function claimAchievement(ach) {
+    if (ach.reward) {
+      if (ach.reward.clicks) {
+        gameState.clicks += ach.reward.clicks;
+        gameState.totalCoins += ach.reward.clicks;
+      }
+      if (ach.reward.clicksPerClick) {
+        // handle any clicksPerClick rewards if needed
+      }
+      if (ach.reward.autoClicksPerSecond) {
+        const autoUpg = upgradeTypes.find(u => u.effect.type === 'autoClicksPerSecond');
+        if (autoUpg) {
+          gameState.upgrades[autoUpg.id] += ach.reward.autoClicksPerSecond;
+        }
+      }
+    }
+    gameState.achievements[ach.id] = 'claimed';
+    saveGame();
+    updateUI();
+  }
+
+  function renderAchievements() {
+    const container = document.getElementById('achievementsList');
+    container.innerHTML = '';
+    achievementsData.forEach(ach => {
+      const state = gameState.achievements[ach.id];
+      const div = document.createElement('div');
+      div.className = 'p-4 rounded-lg ' + 
+        (state === 'claimed' ? 'bg-green-100 dark:bg-green-900' : 
+         state === 'unclaimed' ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-gray-100 dark:bg-gray-800');
+
+      div.innerHTML = `
+        <div class="flex justify-between items-center">
+          <div class="font-bold">${ach.name}</div>
+          ${state === 'locked' ? '🔒' : ''}
+        </div>
+        <div class="text-sm text-gray-600 dark:text-gray-400">${ach.condition}</div>
+        ${state !== 'locked' && ach.rewardDescription ? `<div class="text-xs text-primary mt-1">Reward: ${ach.rewardDescription}</div>` : ''}
+        ${state === 'unclaimed' ? '<button class="claim-btn mt-2 px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 text-sm font-semibold">Claim</button>' : ''}
+      `;
+
+      if (state === 'unclaimed') {
+        div.querySelector('.claim-btn').addEventListener('click', () => {
+          claimAchievement(ach);
         });
+      }
 
-        // Helper Functions
-        function formatNumber(num) {
-            if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
-            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-            if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-            return Math.floor(num).toString();
-        }
+      container.appendChild(div);
+    });
+  }
 
-        function getUpgradeCost(upgrade, owned) {
-            return Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, owned));
-        }
-
-        function calculateClickPower() {
-            let power = 1;
-            upgradeTypes.forEach(upgrade => {
-                if (upgrade.id === 'clickPower' || upgrade.id === 'megaClick') {
-                    power += gameState.upgrades[upgrade.id] * upgrade.effect;
-                }
-            });
-            return power;
-        }
-
-        function calculateAutoCPS() {
-            let cps = 0;
-            upgradeTypes.forEach(upgrade => {
-                if (upgrade.id === 'autoclicker' || upgrade.id === 'superAutoclicker') {
-                    cps += gameState.upgrades[upgrade.id] * upgrade.effect;
-                }
-            });
-            return cps;
-        }
-
-        function getMoneyMultiplier() {
-            return moneyCircleActive ? 2 : 1;
-        }
-
-        // Save/Load Functions
-        function saveGame() {
-            gameState.lastSaveTime = Date.now();
-            // eslint-disable-next-line no-restricted-globals
-            localStorage.setItem('ethemCoinSave', JSON.stringify(gameState));
-        }
-
-        function loadGame() {
-            // eslint-disable-next-line no-restricted-globals
-            const saved = localStorage.getItem('ethemCoinSave');
-            if (saved) {
-                const loaded = JSON.parse(saved);
-                Object.assign(gameState, loaded);
-
-                // Initialize missing upgrade types
-                upgradeTypes.forEach(upgrade => {
-                    if (gameState.upgrades[upgrade.id] === undefined) {
-                        gameState.upgrades[upgrade.id] = 0;
-                    }
-                });
-
-                // Calculate offline progress
-                const now = Date.now();
-                const offlineSeconds = Math.floor((now - gameState.lastSaveTime) / 1000);
-
-                if (offlineSeconds > 60) { // Only show if offline for more than 1 minute
-                    const cps = calculateAutoCPS();
-                    const offlineEarnings = Math.floor(cps * offlineSeconds / 100);
-
-                    if (offlineEarnings > 0) {
-                        gameState.clicks += offlineEarnings;
-                        gameState.totalCoins += offlineEarnings;
-                        showOfflinePopup(offlineEarnings, offlineSeconds);
-                    }
-                }
-
-                return true;
+  function checkLevelUp() {
+    const nextLevel = levelsData.find(lvl => lvl.level === gameState.level + 1);
+    if (nextLevel && gameState.totalCoins >= nextLevel.requiredTotalCoins) {
+      gameState.level = nextLevel.level;
+      if (nextLevel.rewards) {
+        nextLevel.rewards.forEach(reward => {
+          if (reward.includes('clicksPerClick')) {
+            gameState.clickPower += parseInt(reward.replace(/[^\d]/g, ''), 10);
+          } else if (reward.includes('clicks')) {
+            gameState.clicks += parseInt(reward.replace(/[^\d]/g, ''), 10);
+            gameState.totalCoins += parseInt(reward.replace(/[^\d]/g, ''), 10);
+          } else if (reward.includes('autoClicksPerSecond')) {
+            const autoUpg = upgradeTypes.find(u => u.effect.type === 'autoClicksPerSecond');
+            if (autoUpg) {
+              gameState.upgrades[autoUpg.id] += parseInt(reward.replace(/[^\d]/g, ''), 10);
             }
-            return false;
-        }
-
-        function showOfflinePopup(earnings, seconds) {
-            document.getElementById('offlineEarnings').textContent = formatNumber(earnings) + ' coins';
-
-            const minutes = Math.floor(seconds / 60);
-            const hours = Math.floor(minutes / 60);
-            let timeStr = '';
-
-            if (hours > 0) {
-                timeStr = `${hours}h ${minutes % 60}m`;
-            } else {
-                timeStr = `${minutes}m`;
-            }
-
-            document.getElementById('offlineTime').textContent = timeStr;
-            document.getElementById('offlinePopup').classList.remove('hidden');
-        }
-
-        document.getElementById('closeOfflinePopup').addEventListener('click', () => {
-            document.getElementById('offlinePopup').classList.add('hidden');
-            updateUI();
+          }
         });
+      }
+      showLevelUpNotification(nextLevel);
+      saveGame();
+      updateUI();
+    }
+  }
+
+  function showLevelUpNotification(level) {
+    const notif = document.createElement('div');
+    notif.className = 'fixed top-12 left-12 transform -translate-x-12 -translate-y-12 bg-primary text-white px-8 py-6 rounded-lg shadow-2xl z-50 text-center';
+    notif.innerHTML = `
+      <div class="text-4xl mb-2">Level Up!</div>
+      <div class="text-2xl font-bold mb-2">Level ${level.level}</div>
+      <div class="text-lg">${level.rewards ? level.rewards.join(', ') : ''}</div>
+    `;
+    document.body.appendChild(notif);
+    setTimeout(() => {
+      notif.style.transition = 'all 0.5s ease-out';
+      notif.style.opacity = '0';
+      notif.style.transform = 'translate(-50%, -50%) scale(0.8)';
+      setTimeout(() => notif.remove(), 500);
+    }, 3000);
+  }
+
+  function buyUpgrade(upgrade) {
+    const owned = gameState.upgrades[upgrade.id] || 0;
+    const cost = getUpgradeCost(upgrade, owned);
+    if (gameState.clicks >= cost) {
+      gameState.clicks -= cost;
+      gameState.upgrades[upgrade.id] = owned + 1;
+      saveGame();
+      updateUI();
+      checkAchievements();
+      checkLevelUp();
+    }
+  }
+
+  function renderUpgrades() {
+    const container = document.getElementById('upgradesList');
+    container.innerHTML = '';
+    upgradeTypes.forEach(upg => {
+      const owned = gameState.upgrades[upg.id] || 0;
+      const cost = getUpgradeCost(upg, owned);
+      const isUnlocked = gameState.clicks >= upg.unlockAt && owned >= 0;
+      if (!isUnlocked) return;
+
+      const div = document.createElement('div');
+      div.className = `upgrade-item p-4 rounded-lg cursor-pointer ${gameState.clicks >= cost ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' : 'bg-gray-200 dark:bg-gray-700 opacity-60'}`;
+      div.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex items-center gap-2"><span>${upg.effect.type === 'clicksPerClick' ? '🖱️' : '⏱️'}</span></div>
+          <div class="font-bold text-sm">${upg.name}</div>
+        </div>
+        <div class="text-xs text-gray-600 dark:text-gray-400">${upg.baseCost} base cost, x${upg.costMultiplier.toFixed(2)} multiplier</div>
+        <div class="flex justify-between items-center mt-1">
+          <div class="text-sm font-semibold text-primary">${formatNumber(cost)} coins</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Owned: ${owned}</div>
+        </div>
+      `;
+      if (gameState.clicks >= cost) {
+        div.addEventListener('click', () => buyUpgrade(upg));
+      }
+      container.appendChild(div);
+    });
+  }
+
+  function updateUI() {
+    document.getElementById('clickCount').textContent = formatNumber(gameState.clicks);
+    document.getElementById('cpsDisplay').textContent = formatNumber(calculateAutoCPS() * getMoneyMultiplier()) + ' CPS';
+    document.getElementById('totalCoinsDisplay').textContent = 'Total: ' + formatNumber(gameState.totalCoins);
+    document.getElementById('levelDisplay').textContent = gameState.level;
+    renderUpgrades();
+    renderAchievements();
+    updateMoneyCircleUI();
+  }
+
+  // Money Circle functions
+  function startMoneyCircle() {
+    moneyCircleActive = true;
+    moneyCircleEndTime = Date.now() + 2 * 60 * 1000; // 2 minutes
+    document.getElementById('moneyCircleStatus').classList.remove('hidden');
+    let timerInterval = setInterval(() => {
+      const remaining = Math.max(0, moneyCircleEndTime - Date.now());
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        endMoneyCircle();
+      } else {
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        document.getElementById('moneyCircleTimer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      }
+    }, 1000);
+  }
+
+  function endMoneyCircle() {
+    moneyCircleActive = false;
+    document.getElementById('moneyCircleStatus').classList.add('hidden');
+  }
+
+  function scheduleNextMoneyCircle() {
+    const minMinutes = 20;
+    const maxMinutes = 40;
+    const randomMinutes = Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes;
+    if (moneyCircleTimeout) clearTimeout(moneyCircleTimeout);
+    moneyCircleTimeout = setTimeout(startMoneyCircle, randomMinutes * 60 * 1000);
+  }
+
+  function updateMoneyCircleUI() {
+    const button = document.getElementById('clickButton');
+    if (moneyCircleActive) {
+      button.classList.add('money-circle-active');
+    } else {
+      button.classList.remove('money-circle-active');
+    }
+  }
+
+  // Click event handler
+  document.getElementById('clickButton').addEventListener('click', (e) => {
+    const clickPower = calculateClickPower();
+    const earnedClicks = clickPower * getMoneyMultiplier();
+    gameState.clicks += earnedClicks;
+    gameState.totalCoins += earnedClicks;
+    e.currentTarget.classList.add('click-effect');
+    setTimeout(() => e.currentTarget.classList.remove('click-effect'), 100);
+    updateUI();
+    checkAchievements();
+    checkLevelUp();
+    saveGame();
+  });
+
+  // Auto click logic every 100ms
+  setInterval(() => {
+    const cps = calculateAutoCPS() * getMoneyMultiplier();
+    if (cps > 0) {
+      const earned = cps / 10;
+      gameState.clicks += earned;
+      gameState.totalCoins += earned;
+      updateUI();
+      checkAchievements();
+      checkLevelUp();
+      saveGame();
+    }
+  }, 100);
+
+  // Load settings UI & apply settings
+  function applySettings() {
+    const shopPanel = document.getElementById('shopPanel');
+    const mainArea = document.getElementById('mainArea');
+    const side = gameState.settings.shopSide;
+    const color = gameState.settings.shopColor;
+    if (side === 'right') {
+      shopPanel.style.left = 'auto';
+      shopPanel.style.right = '0';
+      mainArea.style.left = '0';
+      mainArea.style.right = 'auto';
+      mainArea.classList.remove('md:left-15');
+      mainArea.classList.add('md:right-15');
+    } else {
+      shopPanel.style.left = '0';
+      shopPanel.style.right = 'auto';
+      mainArea.style.left = 'auto';
+      mainArea.style.right = '0';
+      mainArea.classList.remove('md:right-15');
+      mainArea.classList.add('md:left-15');
+    }
+    shopPanel.style.backgroundColor = color;
+    document.getElementById('shopSide').value = side;
+    document.getElementById('shopColor').value = color;
+  }
+
+  document.getElementById('shopSide').addEventListener('change', (e) => {
+    gameState.settings.shopSide = e.target.value;
+    applySettings();
+    saveGame();
+  });
+
+  document.getElementById('shopColor').addEventListener('input', (e) => {
+    gameState.settings.shopColor = e.target.value;
+    applySettings();
+    saveGame();
+  });
+
+  // Reset progress button
+  document.getElementById('resetProgress').addEventListener('click', () => {
+    if (confirm('Are you sure you want to reset all progress? This cannot be undone!')) {
+      localStorage.removeItem('ethemCoinSave');
+      location.reload();
+    }
+  });
+
+  // Modal toggles
+  document.getElementById('achievementsBtn').addEventListener('click', () => {
+    document.getElementById('achievementsModal').classList.remove('hidden');
+    renderAchievements();
+  });
+  document.getElementById('closeAchievements').addEventListener('click', () => {
+    document.getElementById('achievementsModal').classList.add('hidden');
+  });
+
+  document.getElementById('settingsBtn').addEventListener('click', () => {
+    document.getElementById('settingsModal').classList.remove('hidden');
+  });
+  document.getElementById('closeSettings').addEventListener('click', () => {
+    document.getElementById('settingsModal').classList.add('hidden');
+  });
+
+  // Console modal logic can be added here...
+
+  // Initialize Dark Mode based on system setting
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.classList.add('dark');
+  }
+
+  // Main initialization
+  async function initGame() {
+    await loadJSONData();
+    const loaded = loadGame();
+    if (!loaded) {
+      upgradeTypes.forEach(upg => gameState.upgrades[upg.id] = 0);
+      achievementsData.forEach(ach => gameState.achievements[ach.id] = 'locked');
+    }
+    applySettings();
+    updateUI();
+    checkAchievements();
+    checkLevelUp();
+    scheduleNextMoneyCircle();
+    history.replaceState({ path: window.location.pathname }, document.title, window.location.pathname);
+  }
+
+  window.onload = initGame;
+</script>
 
-        // Click Handler
-        document.getElementById('clickButton').addEventListener('click', function(e) {
-            const clickPower = calculateClickPower();
-            const earnedClicks = clickPower * getMoneyMultiplier();
-            gameState.clicks += earnedClicks;
-            gameState.totalCoins += earnedClicks;
-
-            // Visual feedback
-            this.classList.add('click-effect');
-            setTimeout(() => this.classList.remove('click-effect'), 100);
-
-            // Show floating text
-            showFloatingText(e.clientX, e.clientY, '+' + formatNumber(earnedClicks));
-
-            updateUI();
-            checkAchievements();
-            checkLevelUp();
-            saveGame();
-        });
-
-        function showFloatingText(x, y, text) {
-            const floater = document.createElement('div');
-            floater.textContent = text;
-            floater.style.position = 'fixed';
-            floater.style.left = x + 'px';
-            floater.style.top = y + 'px';
-            floater.style.color = '#5D5CDE';
-            floater.style.fontWeight = 'bold';
-            floater.style.fontSize = '24px';
-            floater.style.pointerEvents = 'none';
-            floater.style.zIndex = '1000';
-            floater.style.transition = 'all 1s ease-out';
-            document.body.appendChild(floater);
-
-            setTimeout(() => {
-                floater.style.transform = 'translateY(-100px)';
-                floater.style.opacity = '0';
-            }, 10);
-
-            setTimeout(() => floater.remove(), 1000);
-        }
-
-        // Auto Clicker Loop
-        setInterval(() => {
-            const cps = calculateAutoCPS();
-            if (cps > 0) {
-                const earnedClicks = (cps / 10) * getMoneyMultiplier(); // Divide by 10 for 100ms interval
-                gameState.clicks += earnedClicks;
-                gameState.totalCoins += earnedClicks;
-                updateUI();
-            }
-        }, 100);
-
-        // Save every 5 seconds
-        setInterval(saveGame, 5000);
-
-        // Upgrade System
-        function buyUpgrade(upgradeType) {
-            const owned = gameState.upgrades[upgradeType.id] || 0;
-            const cost = getUpgradeCost(upgradeType, owned);
-
-            if (gameState.clicks >= cost) {
-                gameState.clicks -= cost;
-                gameState.upgrades[upgradeType.id] = owned + 1;
-                updateUI();
-                saveGame();
-                checkAchievements();
-            }
-        }
-
-        function renderUpgrades() {
-            const container = document.getElementById('upgradesList');
-            container.innerHTML = '';
-
-            upgradeTypes.forEach((upgrade, index) => {
-                const owned = gameState.upgrades[upgrade.id] || 0;
-                const cost = getUpgradeCost(upgrade, owned);
-                const canAfford = gameState.clicks >= cost;
-                const isUnlocked = gameState.clicks >= upgrade.unlockThreshold || owned > 0;
-
-                if (!isUnlocked) return;
-
-                const div = document.createElement('div');
-                div.className = `upgrade-item p-4 rounded-lg cursor-pointer ${canAfford ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' : 'bg-gray-200 dark:bg-gray-700 opacity-60'}`;
-                div.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl">${upgrade.emoji}</span>
-                            <div>
-                                <div class="font-bold text-sm">${upgrade.name}</div>
-                                <div class="text-xs text-gray-600 dark:text-gray-400">${upgrade.description}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <div class="text-sm font-semibold text-primary">${formatNumber(cost)} coins</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Owned: ${owned}</div>
-                    </div>
-                `;
-
-                if (canAfford) {
-                    div.addEventListener('click', () => buyUpgrade(upgrade));
-                }
-
-                container.appendChild(div);
-            });
-        }
-
-        // UI Update
-        function updateUI() {
-            document.getElementById('clickCount').textContent = formatNumber(gameState.clicks);
-            document.getElementById('cpsDisplay').textContent = formatNumber(calculateAutoCPS() * getMoneyMultiplier()) + ' CPS';
-            document.getElementById('totalCoinsDisplay').textContent = 'Total: ' + formatNumber(gameState.totalCoins);
-            document.getElementById('levelDisplay').textContent = gameState.level;
-            renderUpgrades();
-            renderAchievements();
-            updateMoneyCircleUI();
-        }
-
-        // Achievements System
-        function loadAchievements() {
-            // Default achievements if JSON not available
-            achievementsData = [
-                {
-                    id: 'first_click',
-                    name: 'First Click',
-                    description: 'Click the button for the first time',
-                    condition: 'clicks >= 1',
-                    reward: { clicks: 10 }
-                },
-                {
-                    id: 'hundred_clicks',
-                    name: 'Century',
-                    description: 'Reach 100 total coins',
-                    condition: 'totalCoins >= 100',
-                    reward: { clicks: 50 }
-                },
-                {
-                    id: 'first_upgrade',
-                    name: 'Investor',
-                    description: 'Purchase your first upgrade',
-                    condition: 'upgrades.clickPower >= 1 || upgrades.autoclicker >= 1',
-                    reward: { clicks: 25 }
-                },
-                {
-                    id: 'auto_king',
-                    name: 'Automation King',
-                    description: 'Own 10 autoclickers',
-                    condition: 'upgrades.autoclicker >= 10',
-                    reward: { cps: 5 }
-                },
-                {
-                    id: 'millionaire',
-                    name: 'Millionaire',
-                    description: 'Earn 1,000,000 total coins',
-                    condition: 'totalCoins >= 1000000',
-                    reward: { clicks: 10000 }
-                }
-            ];
-
-            // Initialize achievement states
-            achievementsData.forEach(ach => {
-                if (!gameState.achievements[ach.id]) {
-                    gameState.achievements[ach.id] = 'locked';
-                }
-            });
-        }
-
-        function checkAchievements() {
-            achievementsData.forEach(ach => {
-                if (gameState.achievements[ach.id] === 'locked') {
-                    try {
-                        const condition = ach.condition
-                            .replace(/clicks/g, 'gameState.clicks')
-                            .replace(/totalCoins/g, 'gameState.totalCoins')
-                            .replace(/upgrades\.(\w+)/g, 'gameState.upgrades.$1')
-                            .replace(/cps/g, 'calculateAutoCPS()');
-
-                        if (eval(condition)) {
-                            gameState.achievements[ach.id] = 'unclaimed';
-                            showAchievementNotification(ach.name);
-                        }
-                    } catch (e) {
-                        console.error('Error checking achievement:', ach.id, e);
-                    }
-                }
-            });
-
-            renderAchievements();
-        }
-
-        function showAchievementNotification(name) {
-            const notif = document.createElement('div');
-            notif.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-primary text-white px-6 py-3 rounded-lg shadow-lg z-50';
-            notif.innerHTML = `🏆 Achievement Unlocked: ${name}!`;
-            document.body.appendChild(notif);
-
-            setTimeout(() => {
-                notif.style.transition = 'all 0.5s ease-out';
-                notif.style.transform = 'translate(-50%, -200px)';
-                notif.style.opacity = '0';
-                setTimeout(() => notif.remove(), 500);
-            }, 3000);
-        }
-
-        function claimAchievement(ach) {
-            if (gameState.achievements[ach.id] === 'unclaimed') {
-                // Apply rewards
-                if (ach.reward.clicks) {
-                    gameState.clicks += ach.reward.clicks;
-                    gameState.totalCoins += ach.reward.clicks;
-                }
-                if (ach.reward.cps) {
-                    // Add autoclickers based on CPS reward
-                    const autoUpgrade = upgradeTypes.find(u => u.id === 'autoclicker');
-                    if (autoUpgrade) {
-                        gameState.upgrades.autoclicker += ach.reward.cps;
-                    }
-                }
-
-                gameState.achievements[ach.id] = 'claimed';
-                saveGame();
-                updateUI();
-            }
-        }
-
-        function renderAchievements() {
-            const container = document.getElementById('achievementsList');
-            container.innerHTML = '';
-
-            achievementsData.forEach(ach => {
-                const state = gameState.achievements[ach.id];
-                const div = document.createElement('div');
-                div.className = `p-4 rounded-lg ${
-                    state === 'claimed' ? 'bg-green-100 dark:bg-green-900' :
-                    state === 'unclaimed' ? 'bg-yellow-100 dark:bg-yellow-900' :
-                    'bg-gray-100 dark:bg-gray-800'
-                }`;
-
-                div.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div class="flex-1">
-                            <div class="font-bold">${state === 'locked' ? '???' : ach.name}</div>
-                            <div class="text-sm text-gray-600 dark:text-gray-400">${state === 'locked' ? 'Locked' : ach.description}</div>
-                            ${state !== 'locked' && ach.reward ? `<div class="text-xs text-primary mt-1">Reward: ${ach.reward.clicks ? '+' + ach.reward.clicks + ' coins' : ''} ${ach.reward.cps ? '+' + ach.reward.cps + ' CPS' : ''}</div>` : ''}
-                        </div>
-                        ${state === 'unclaimed' ? '<button class="claim-btn px-4 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 transition-all duration-200 font-semibold text-sm">Claim</button>' : ''}
-                        ${state === 'claimed' ? '<span class="text-green-600 dark:text-green-400 font-bold">✓</span>' : ''}
-                    </div>
-                `;
-
-                if (state === 'unclaimed') {
-                    div.querySelector('.claim-btn').addEventListener('click', () => claimAchievement(ach));
-                }
-
-                container.appendChild(div);
-            });
-        }
-
-        // Levels System
-        function loadLevels() {
-            // Default levels if JSON not available
-            levelsData = [
-                { level: 1, requiredCoins: 0, reward: {} },
-                { level: 2, requiredCoins: 100, reward: { clicks: 100 } },
-                { level: 3, requiredCoins: 500, reward: { clicks: 500 } },
-                { level: 4, requiredCoins: 1000, reward: { clicks: 1000, cps: 5 } },
-                { level: 5, requiredCoins: 5000, reward: { clicks: 5000, cps: 10 } },
-                { level: 6, requiredCoins: 10000, reward: { clicks: 10000, cps: 20 } },
-                { level: 7, requiredCoins: 50000, reward: { clicks: 50000, cps: 50 } },
-                { level: 8, requiredCoins: 100000, reward: { clicks: 100000, cps: 100 } },
-                { level: 9, requiredCoins: 500000, reward: { clicks: 500000, cps: 200 } },
-                { level: 10, requiredCoins: 1000000, reward: { clicks: 1000000, cps: 500 } }
-            ];
-        }
-
-        function checkLevelUp() {
-            const nextLevel = levelsData.find(l => l.level === gameState.level + 1);
-            if (nextLevel && gameState.totalCoins >= nextLevel.requiredCoins) {
-                gameState.level = nextLevel.level;
-
-                // Apply rewards
-                if (nextLevel.reward.clicks) {
-                    gameState.clicks += nextLevel.reward.clicks;
-                }
-                if (nextLevel.reward.cps) {
-                    gameState.upgrades.autoclicker += nextLevel.reward.cps;
-                }
-
-                showLevelUpNotification(nextLevel);
-                saveGame();
-                updateUI();
-            }
-        }
-
-        function showLevelUpNotification(level) {
-            const notif = document.createElement('div');
-            notif.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary text-white px-8 py-6 rounded-lg shadow-2xl z-50 text-center';
-            notif.innerHTML = `
-                <div class="text-4xl mb-2">🎉</div>
-                <div class="text-2xl font-bold mb-2">Level Up!</div>
-                <div class="text-lg">Level ${level.level}</div>
-                ${level.reward.clicks ? `<div class="text-sm mt-2">+${formatNumber(level.reward.clicks)} coins</div>` : ''}
-                ${level.reward.cps ? `<div class="text-sm">+${level.reward.cps} CPS</div>` : ''}
-            `;
-            document.body.appendChild(notif);
-
-            setTimeout(() => {
-                notif.style.transition = 'all 0.5s ease-out';
-                notif.style.opacity = '0';
-                notif.style.transform = 'translate(-50%, -50%) scale(0.8)';
-                setTimeout(() => notif.remove(), 500);
-            }, 3000);
-        }
-
-        // Console System
-        const consoleCommands = {
-            help: () => {
-                return `Available commands:
-- ethemcoin [+|-] <amount> - Add or subtract coins
-- listallupgrades - List all upgrades with indices
-- ethemupgrade <index> <amount> - Grant free upgrades
-- clear - Clear console output
-- help - Show this help message`;
-            },
-            clear: () => {
-                document.getElementById('consoleOutput').innerHTML = '';
-                return null;
-            },
-            ethemcoin: (args) => {
-                if (args.length < 2) return 'Error: Usage: ethemcoin [+|-] <amount>';
-                const op = args[0];
-                const amount = parseInt(args[1]);
-                if (isNaN(amount)) return 'Error: Amount must be a number';
-
-                if (op === '+') {
-                    gameState.clicks += amount;
-                    gameState.totalCoins += amount;
-                    saveGame();
-                    updateUI();
-                    return `Added ${amount} coins. New balance: ${formatNumber(gameState.clicks)}`;
-                } else if (op === '-') {
-                    gameState.clicks = Math.max(0, gameState.clicks - amount);
-                    saveGame();
-                    updateUI();
-                    return `Subtracted ${amount} coins. New balance: ${formatNumber(gameState.clicks)}`;
-                } else {
-                    return 'Error: First argument must be + or -';
-                }
-            },
-            listallupgrades: () => {
-                let output = 'Available upgrades:\n';
-                upgradeTypes.forEach((upgrade, index) => {
-                    const owned = gameState.upgrades[upgrade.id] || 0;
-                    output += `${index}: ${upgrade.name} (${upgrade.id}) - Owned: ${owned}\n`;
-                });
-                return output;
-            },
-            ethemupgrade: (args) => {
-                if (args.length < 2) return 'Error: Usage: ethemupgrade <index> <amount>';
-                const index = parseInt(args[0]);
-                const amount = parseInt(args[1]);
-
-                if (isNaN(index) || isNaN(amount)) return 'Error: Both arguments must be numbers';
-                if (index < 0 || index >= upgradeTypes.length) return `Error: Index must be between 0 and ${upgradeTypes.length - 1}`;
-                if (amount < 0) return 'Error: Amount must be positive';
-
-                const upgrade = upgradeTypes[index];
-                gameState.upgrades[upgrade.id] = (gameState.upgrades[upgrade.id] || 0) + amount;
-                saveGame();
-                updateUI();
-                return `Granted ${amount}x ${upgrade.name}. New count: ${gameState.upgrades[upgrade.id]}`;
-            }
-        };
-
-        function executeConsoleCommand(input) {
-            const parts = input.trim().split(/\s+/);
-            const cmd = parts[0].toLowerCase();
-            const args = parts.slice(1);
-
-            if (consoleCommands[cmd]) {
-                return consoleCommands[cmd](args);
-            } else {
-                return `Error: Unknown command '${cmd}'. Type 'help' for available commands.`;
-            }
-        }
-
-        document.getElementById('consoleSubmit').addEventListener('click', () => {
-            const input = document.getElementById('consoleInput');
-            const output = document.getElementById('consoleOutput');
-            const cmd = input.value.trim();
-
-            if (cmd) {
-                const cmdDiv = document.createElement('div');
-                cmdDiv.textContent = '> ' + cmd;
-                cmdDiv.className = 'text-white';
-                output.appendChild(cmdDiv);
-
-                const result = executeConsoleCommand(cmd);
-                if (result) {
-                    const resultDiv = document.createElement('div');
-                    resultDiv.textContent = result;
-                    resultDiv.className = result.startsWith('Error') ? 'text-red-400' : 'text-green-400';
-                    resultDiv.style.whiteSpace = 'pre-line';
-                    output.appendChild(resultDiv);
-                }
-
-                input.value = '';
-                output.scrollTop = output.scrollHeight;
-            }
-        });
-
-        document.getElementById('consoleInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('consoleSubmit').click();
-            }
-        });
-
-        // Settings System
-        function applySettings() {
-            const shopPanel = document.getElementById('shopPanel');
-            const mainArea = document.getElementById('mainArea');
-            const side = gameState.settings.shopSide;
-            const color = gameState.settings.shopColor;
-
-            if (side === 'right') {
-                shopPanel.style.left = 'auto';
-                shopPanel.style.right = '0';
-                mainArea.style.left = '0';
-                mainArea.style.right = 'auto';
-                mainArea.classList.remove('md:left-1/5');
-                mainArea.classList.add('md:right-1/5');
-            } else {
-                shopPanel.style.left = '0';
-                shopPanel.style.right = 'auto';
-                mainArea.style.left = '0';
-                mainArea.style.right = 'auto';
-                mainArea.classList.remove('md:right-1/5');
-                mainArea.classList.add('md:left-1/5');
-            }
-
-            shopPanel.style.backgroundColor = color;
-            document.getElementById('shopSide').value = side;
-            document.getElementById('shopColor').value = color;
-        }
-
-        document.getElementById('shopSide').addEventListener('change', (e) => {
-            gameState.settings.shopSide = e.target.value;
-            applySettings();
-            saveGame();
-        });
-
-        document.getElementById('shopColor').addEventListener('input', (e) => {
-            gameState.settings.shopColor = e.target.value;
-            applySettings();
-            saveGame();
-        });
-
-        // Reset Progress
-        document.getElementById('resetProgress').addEventListener('click', () => {
-            showConfirmDialog('Are you sure you want to reset all progress? This cannot be undone!', () => {
-                // eslint-disable-next-line no-restricted-globals
-                localStorage.removeItem('ethemCoinSave');
-                location.reload();
-            });
-        });
-
-        function showConfirmDialog(message, onConfirm) {
-            const modal = document.getElementById('confirmModal');
-            document.getElementById('confirmMessage').textContent = message;
-            modal.classList.remove('hidden');
-
-            const handleConfirm = () => {
-                modal.classList.add('hidden');
-                onConfirm();
-                cleanup();
-            };
-
-            const handleCancel = () => {
-                modal.classList.add('hidden');
-                cleanup();
-            };
-
-            const cleanup = () => {
-                document.getElementById('confirmOk').removeEventListener('click', handleConfirm);
-                document.getElementById('confirmCancel').removeEventListener('click', handleCancel);
-            };
-
-            document.getElementById('confirmOk').addEventListener('click', handleConfirm);
-            document.getElementById('confirmCancel').addEventListener('click', handleCancel);
-        }
-
-        // Modal Controls
-        document.getElementById('achievementsBtn').addEventListener('click', () => {
-            document.getElementById('achievementsModal').classList.remove('hidden');
-            updateURL('/achievements');
-        });
-
-        document.getElementById('closeAchievements').addEventListener('click', () => {
-            document.getElementById('achievementsModal').classList.add('hidden');
-            updateURL('/');
-        });
-
-        document.getElementById('settingsBtn').addEventListener('click', () => {
-            document.getElementById('settingsModal').classList.remove('hidden');
-            updateURL('/settings');
-        });
-
-        document.getElementById('closeSettings').addEventListener('click', () => {
-            document.getElementById('settingsModal').classList.add('hidden');
-            updateURL('/');
-        });
-
-        document.getElementById('consoleBtn').addEventListener('click', () => {
-            document.getElementById('consoleModal').classList.remove('hidden');
-            updateURL('/console');
-        });
-
-        document.getElementById('closeConsole').addEventListener('click', () => {
-            document.getElementById('consoleModal').classList.add('hidden');
-            updateURL('/');
-        });
-
-        // URL Manipulation
-        function updateURL(path) {
-            history.pushState({ path }, '', path);
-        }
-
-        window.addEventListener('popstate', (event) => {
-            const path = event.state?.path || '/';
-
-            // Close all modals
-            document.getElementById('achievementsModal').classList.add('hidden');
-            document.getElementById('settingsModal').classList.add('hidden');
-            document.getElementById('consoleModal').classList.add('hidden');
-
-            // Open appropriate modal based on path
-            if (path === '/achievements') {
-                document.getElementById('achievementsModal').classList.remove('hidden');
-            } else if (path === '/settings') {
-                document.getElementById('settingsModal').classList.remove('hidden');
-            } else if (path === '/console') {
-                document.getElementById('consoleModal').classList.remove('hidden');
-            }
-        });
-
-        // Money Circle Event System
-        function startMoneyCircle() {
-            moneyCircleActive = true;
-            moneyCircleEndTime = Date.now() + 2 * 60 * 1000; // 2 minutes
-            document.getElementById('moneyCircleStatus').classList.remove('hidden');
-
-            const timerInterval = setInterval(() => {
-                const remaining = Math.max(0, moneyCircleEndTime - Date.now());
-                if (remaining <= 0) {
-                    clearInterval(timerInterval);
-                    endMoneyCircle();
-                } else {
-                    const minutes = Math.floor(remaining / 60000);
-                    const seconds = Math.floor((remaining % 60000) / 1000);
-                    document.getElementById('moneyCircleTimer').textContent =
-                        `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                }
-            }, 100);
-        }
-
-        function endMoneyCircle() {
-            moneyCircleActive = false;
-            document.getElementById('moneyCircleStatus').classList.add('hidden');
-            scheduleNextMoneyCircle();
-        }
-
-        function scheduleNextMoneyCircle() {
-            const minMinutes = 20;
-            const maxMinutes = 40;
-            const randomMinutes = Math.random() * (maxMinutes - minMinutes) + minMinutes;
-            const delay = randomMinutes * 60 * 1000;
-
-            if (moneyCircleTimeout) {
-                clearTimeout(moneyCircleTimeout);
-            }
-
-            moneyCircleTimeout = setTimeout(startMoneyCircle, delay);
-        }
-
-        function updateMoneyCircleUI() {
-            const button = document.getElementById('clickButton');
-            if (moneyCircleActive) {
-                button.classList.add('money-circle-active');
-            } else {
-                button.classList.remove('money-circle-active');
-            }
-        }
-
-        // Initialize Game
-        function initGame() {
-            loadLevels();
-            loadAchievements();
-
-            const loaded = loadGame();
-            if (!loaded) {
-                // Initialize default upgrades
-                upgradeTypes.forEach(upgrade => {
-                    gameState.upgrades[upgrade.id] = 0;
-                });
-            }
-
-            applySettings();
-            updateUI();
-            checkAchievements();
-            scheduleNextMoneyCircle();
-
-            // Set initial URL state
-            history.replaceState({ path: '/' }, '', '/');
-        }
-
-        // Start the game
-        initGame();
-    </script>
 </body>
 </html>
-
